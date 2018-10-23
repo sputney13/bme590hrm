@@ -3,8 +3,8 @@ import pytest
 import hrm
 
 
-def test_read_csv_data():
-    """ Checks that a proper, existing .csv file has been inputted
+def test_read_csv_data_reader():
+    """ Checks that a proper csv file has been inputted, or gives error
 
     Args:
 
@@ -15,17 +15,15 @@ def test_read_csv_data():
         hrm.read_csv_data('test_data.csv')
 
 
-def test_store_csv_data():
-    """ Checks that only floats are stored to time and voltage
+def test_read_csv_data_store():
+    """ Checks that csv data is stored, and that non-floats are skipped
 
     Args:
 
     Returns:
 
     """
-    readcsv = ([1.0, 3.0], [2.0, 4.0])
-    falsecsv = ([1.0, 'string'], [2.0, 4.0])
-    (time1, voltage1) = hrm.store_csv_data(readcsv)
-    (time2, voltage2) = hrm.store_csv_data(falsecsv)
-    assert (time1, voltage1) == ([1.0, 2.0], [3.0, 4.0])
-    assert (time2, voltage2) == ([2.0], [4.0])
+    time1, voltage1 = hrm.read_csv_data('test_data1.csv')
+    time2, voltage2 = hrm.read_csv_data('test_data28.csv')
+    assert (time1[0], voltage1[0]) == (0, -0.145)
+    assert (time2[325], voltage2[325]) == (0.903, -0.285)
