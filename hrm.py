@@ -57,7 +57,21 @@ def find_voltage_extrema(voltage):
     return voltage_extremes
 
 
+def find_duration(time):
+    """ Subtracts beginning time from end time to find time duration
+
+    Args:
+        time: list of time values saved from csv data
+
+    Returns:
+        duration: time duration of the ECG strip
+
+    """
+    duration = time[-1] - time[1]
+    return duration
+
+
 if __name__ == "__main__":
     time, voltage = read_csv_data("test_data1.csv")
-    voltage_extremes = find_voltage_extrema(voltage)
-    print(voltage_extremes)
+    duration = find_duration(time)
+    print(duration)
