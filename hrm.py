@@ -9,42 +9,37 @@ def read_csv_data(filename):
         filename: string containing .csv file name
 
     Returns:
-        csvreader: .csv data in float format
+        time: list containing ECG time data from file in s
+        voltage: list containing ECG voltage data from file in mV
 
     """
     global save_file
     save_file = filename.strip('.csv')
+    time = []
+    voltage = []
+
     check = os.path.isfile(filename)
     if check is False:
         raise FileNotFoundError("File must exist on machine.")
+
     while True:
         with open(filename, newline='') as csvfile:
             try:
                 csvreader = csv.reader(csvfile, delimiter=',',
                                        quoting=csv.QUOTE_NONNUMERIC)
+                for row in csvreader:
+                    if isinstance(row[0], float) and\
+                            isinstance(row[1], float) is True:
+                        time.append(row[0])
+                        voltage.append(row[1])
+                    else:
+                        continue
                 break
             except csv.Error:
                 filename = input("Input a valid .csv file as a string:")
-    return csvreader
-
-
-def store_csv_data(csvreader):
-    """ Stores .csv data into separate time and voltage lists
-
-    Args:
-        csvreader: float values of .csv file input
-
-    Returns:
-        time: time values from .csv file saved as list
-        voltage: voltage values from .csv file saved as list
-
-    """
-    time = []
-    voltage = []
-    for row in csvreader:
-        if isinstance(row[0], float) and isinstance(row[1], float) is True:
-                time.append(row[0])
-                voltage.append(row[1])
-        else:
-            continue
+                read_csv_data(filename)
     return time, voltage
+
+
+if __name__ == "__main__":
+    time, voltage = read_csv_data("test_data1.csv")
