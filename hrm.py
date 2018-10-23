@@ -21,7 +21,7 @@ def verify_csv_file(filename):
 
 
 def store_csv_data(filename):
-    """ Reads in data from a valid, existing .csv type file
+    """ Reads in and stores float data from a valid .csv type file
 
     Args:
         filename: string containing .csv file name
@@ -52,5 +52,37 @@ def store_csv_data(filename):
     return time, voltage
 
 
+def find_voltage_extrema(voltage):
+    """ Determines minimum and maximum values of list, saves into tuple
+
+    Args:
+        voltage: list of voltage values saved from csv data
+
+    Returns:
+        voltage_extremes: tuple containing min and max voltage values
+
+    """
+    maxvoltage = max(voltage)
+    minvoltage = min(voltage)
+    voltage_extremes = (minvoltage, maxvoltage)
+    return voltage_extremes
+
+
+def find_duration(time):
+    """ Subtracts beginning time from end time to find time duration
+
+    Args:
+        time: list of time values saved from csv data
+
+    Returns:
+        duration: time duration of the ECG strip
+
+    """
+    duration = time[-1] - time[1]
+    return duration
+
+
 if __name__ == "__main__":
     time, voltage = store_csv_data("test_data1.csv")
+    duration = find_duration(time)
+    print(duration)
