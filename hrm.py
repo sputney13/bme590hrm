@@ -2,7 +2,25 @@ import csv
 import os.path
 
 
-def read_csv_data(filename):
+def verify_csv_file(filename):
+    """ Validates that user inputted file exists on drive
+
+    Args:
+        filename: string containing .csv file name
+
+    Returns:
+        savefile: existing inputted file, stripped of .csv
+
+    """
+    check = os.path.isfile(filename)
+    if check is False:
+        raise FileNotFoundError("File must exist on machine.")
+    else:
+        save_file = filename.strip('.csv')
+    return save_file
+
+
+def store_csv_data(filename):
     """ Reads in data from a valid, existing .csv type file
 
     Args:
@@ -13,15 +31,8 @@ def read_csv_data(filename):
         voltage: list containing ECG voltage data from file in mV
 
     """
-    global save_file
-    save_file = filename.strip('.csv')
     time = []
     voltage = []
-
-    check = os.path.isfile(filename)
-    if check is False:
-        raise FileNotFoundError("File must exist on machine.")
-
     while True:
         with open(filename, newline='') as csvfile:
             try:
@@ -37,9 +48,9 @@ def read_csv_data(filename):
                 break
             except csv.Error:
                 filename = input("Input a valid .csv file as a string:")
-                read_csv_data(filename)
+                store_csv_data(filename)
     return time, voltage
 
 
 if __name__ == "__main__":
-    time, voltage = read_csv_data("test_data1.csv")
+    time, voltage = store_csv_data("test_data1.csv")
