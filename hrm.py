@@ -1,5 +1,7 @@
 import csv
 import os.path
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 def verify_csv_file(filename):
@@ -82,7 +84,67 @@ def find_duration(time):
     return duration
 
 
+def set_perfect_beat():
+    """ Cuts test_data21.csv to give one "perfect" beat for correlation
+
+    Returns:
+        perfect_time: array of time values for "perfect" beat
+        perfect_voltage: array of voltage values for "perfect" beat
+
+    """
+    time, voltage = store_csv_data("test_data21.csv")
+    perfect_time = np.asarray(time[0:119])
+    perfect_voltage = np.asarray(voltage[0:119])
+    return perfect_time, perfect_voltage
+
+
+def correlate_perfect_beat(voltage, perfect_voltage):
+    """ Cross-correlates voltage data with "perfect" beat
+
+    Args:
+        voltage: list of voltage values saved from .csv data
+        perfect_voltage: array of voltage values for "perfect" beat
+
+    Returns:
+        correlate_voltage: correlation of voltage array
+
+    """
+    voltage = np.asarray(voltage)
+    correlate_voltage = np.correlate(voltage, perfect_voltage, 'same')
+    return correlate_voltage
+
+
+def detect_beats(time, correlate_voltage):
+    """ Uses a threshold of |4.75| mV on the correlation to detect beats
+
+    Args:
+        correlate_voltage: correlation of voltage array and "perfect" beat
+
+    Returns:
+         num_beats: number of beats detected over all time
+         beat_times: times at which a beat occurred
+
+    """
+    n = 0
+    num_beats = 0
+    beat_times = []
+    while n < len(correlate_voltage):
+        if abs(correlate_voltage[n]) > 4.75:
+            num_beats += 1
+            beat_times.append(time[n])
+            n = n + 100
+        else:
+            n = n + 1
+    return num_beats, beat_times
+
+
 if __name__ == "__main__":
     time, voltage = store_csv_data("test_data1.csv")
-    duration = find_duration(time)
-    print(duration)
+    perfect_time, perfect_voltage = set_perfect_beat()
+    correlate_voltage = correlate_perfect_beat(voltage, perfect_voltage)
+    num_beats, beat_times = detect_beats(time, correlate_voltage)
+    print(num_beats)
+    print(beat_times)
+    plt.plot(time, voltage)
+    plt.plot(time, correlate_voltage)
+    plt.show()
