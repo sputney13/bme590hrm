@@ -53,3 +53,46 @@ def test_find_duration():
     """
     duration = hrm.find_duration(time1)
     assert duration == 27.772
+
+
+def test_set_perfect_beat():
+    """ Verifies the perfect beat is cut from the data properly
+
+    Args:
+
+    Returns:
+
+    """
+    global perfect_voltage
+    perfect_time, perfect_voltage = hrm.set_perfect_beat()
+    time, voltage = hrm.store_csv_data("test_data21.csv")
+    assert perfect_time[100] == time[100]
+    assert perfect_voltage[100] == voltage[100]
+
+
+def test_correlate_perfect_beat():
+    """ Verifies the voltage was properly correlated with the data
+
+    Args:
+
+    Returns:
+
+    """
+    global correlate_voltage
+    correlate_voltage = hrm.correlate_perfect_beat(voltage1,
+                                                   perfect_voltage)
+    assert correlate_voltage.all() > -6
+
+
+def test_detect_beats():
+    """ Verifies beat detector stores proper beat number and beat times
+
+    Args:
+
+    Returns:
+
+    """
+    num_beats, beat_times = hrm.detect_beats(time1, correlate_voltage)
+    assert num_beats == 35
+    assert len(beat_times) == 35
+    assert beat_times[0] < 0.5
