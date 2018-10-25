@@ -148,4 +148,3 @@ if __name__ == "__main__":
     plt.plot(time, voltage)
     plt.plot(time, correlate_voltage)
     plt.show()
-
