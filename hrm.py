@@ -217,7 +217,8 @@ if __name__ == "__main__":
     print(trunc_num_beats)
     # print(trunc_beats)
     print(mean_hr_bpm)
-    metrics = generate_metrics_dict(mean_hr_bpm, voltage_extremes, duration, num_beats, beats)
+    metrics = generate_metrics_dict(mean_hr_bpm, voltage_extremes,
+                                    duration, num_beats, beats)
     print(metrics)
     # plt.plot(time, voltage)
     # plt.plot(time, correlate_voltage)
