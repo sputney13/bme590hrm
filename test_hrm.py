@@ -39,6 +39,7 @@ def test_find_voltage_extrema():
     Returns:
 
     """
+    global voltage_extremes
     voltage_extremes = hrm.find_voltage_extrema(voltage1)
     assert voltage_extremes == (-0.68, 1.05)
 
@@ -51,6 +52,7 @@ def test_find_duration():
     Returns:
 
     """
+    global duration
     duration = hrm.find_duration(time1)
     assert duration == 27.772
 
@@ -92,6 +94,8 @@ def test_detect_beats():
     Returns:
 
     """
+    global num_beats
+    global beats
     num_beats, beats = hrm.detect_beats(time1, correlate_voltage)
     assert num_beats == 35
     assert len(beats) == 35
@@ -106,8 +110,40 @@ def test_user_truncated_time():
     Returns:
 
     """
+    global trunc_num_beats
     trunc_num_beats, trunc_beats = hrm.user_truncated_time(
         0, 5, time1, correlate_voltage)
     assert trunc_num_beats == 6
     assert len(trunc_beats) == 6
     assert trunc_beats[5] < 5
+
+
+def test_calculate_mean_bpm():
+    """ Verifies that the mean bpm for the interval is correct
+
+    Args:
+
+    Returns:
+
+    """
+    global mean_hr_bpm
+    mean_hr_bpm = hrm.calculate_mean_bpm(0, 5, trunc_num_beats)
+    assert mean_hr_bpm == 72
+
+
+def test_generate_metrics_dict():
+    """ Verifies that the proper values are stored in the metrics dict
+
+    Args:
+
+    Returns:
+
+    """
+    metrics = hrm.generate_metrics_dict(mean_hr_bpm, voltage_extremes,
+                                        duration, num_beats, beats)
+    assert metrics["mean_hr_bpm"] == 72
+    assert metrics["voltage_extremes"] == (-0.68, 1.05)
+    assert metrics["duration"] == 27.772
+    assert metrics["num_beats"] == 35
+    assert len(metrics["beats"]) == 35
+    assert metrics["beats"][0] < 0.5
