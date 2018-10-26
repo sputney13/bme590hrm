@@ -179,8 +179,35 @@ def calculate_mean_bpm(min_time, max_time, trunc_num_beats):
     return mean_hr_bpm
 
 
+def generate_metrics_dict(mean_hr_bpm, voltage_extremes,
+                          duration, num_beats, beats):
+    """ Creates metrics dictionary containing required values
+
+    Args:
+        mean_hr_bpm: average heart rate over user specified interval (bpm)
+        voltage_extremes: tuple containing min and max of voltage data
+        duration: time duration of time data (s)
+        num_beats: number of beats in voltage data
+        beats: array of times at which beats occurred
+
+    Returns:
+         metrics: dictionary containing keys for the input values
+
+    """
+    metrics = {
+        "mean_hr_bpm": mean_hr_bpm,
+        "voltage_extremes": voltage_extremes,
+        "duration": duration,
+        "num_beats": num_beats,
+        "beats": beats
+    }
+    return metrics
+
+
 if __name__ == "__main__":
     time, voltage = store_csv_data("test_data1.csv")
+    voltage_extremes = find_voltage_extrema(voltage)
+    duration = find_duration(time)
     perfect_time, perfect_voltage = set_perfect_beat()
     correlate_voltage = correlate_perfect_beat(voltage, perfect_voltage)
     num_beats, beats = detect_beats(time, correlate_voltage)
@@ -190,6 +217,8 @@ if __name__ == "__main__":
     print(trunc_num_beats)
     # print(trunc_beats)
     print(mean_hr_bpm)
+    metrics = generate_metrics_dict(mean_hr_bpm, voltage_extremes, duration, num_beats, beats)
+    print(metrics)
     # plt.plot(time, voltage)
     # plt.plot(time, correlate_voltage)
     # plt.show()
