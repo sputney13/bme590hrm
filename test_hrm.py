@@ -1,5 +1,6 @@
 import csv
 import pytest
+import json
 import hrm
 
 
@@ -11,8 +12,11 @@ def test_verify_csv_file():
     Returns:
 
     """
+    global save_file
     with pytest.raises(FileNotFoundError):
         hrm.verify_csv_file('test_data.csv')
+    save_file = hrm.verify_csv_file('test_data1.csv')
+    assert save_file == 'test_data1'
 
 
 def test_store_csv_data():
@@ -139,6 +143,7 @@ def test_generate_metrics_dict():
     Returns:
 
     """
+    global metrics
     metrics = hrm.generate_metrics_dict(mean_hr_bpm, voltage_extremes,
                                         duration, num_beats, beats)
     assert metrics["mean_hr_bpm"] == 72
@@ -147,3 +152,20 @@ def test_generate_metrics_dict():
     assert metrics["num_beats"] == 35
     assert len(metrics["beats"]) == 35
     assert metrics["beats"][0] < 0.5
+
+
+def test_write_json_file():
+    """ Verifies json file is written with proper name and keys
+
+    Args:
+
+    Returns:
+
+    """
+    json_file = open("test_data1.json")
+    new_metrics = json.loads(json_file.read())
+    assert new_metrics["mean_hr_bpm"] == metrics["mean_hr_bpm"]
+    assert new_metrics["voltage_extremes"] == list(metrics["voltage_extremes"])
+    assert new_metrics["duration"] == metrics["duration"]
+    assert new_metrics["num_beats"] == metrics["num_beats"]
+    assert new_metrics["beats"] == list(metrics["beats"])
