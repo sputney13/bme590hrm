@@ -2,6 +2,7 @@ import csv
 import os.path
 import matplotlib.pyplot as plt
 import numpy as np
+import json
 
 
 def verify_csv_file(filename):
@@ -11,7 +12,7 @@ def verify_csv_file(filename):
         filename: string containing .csv file name
 
     Returns:
-        savefile: existing inputted file, stripped of .csv
+        save_file: existing inputted file, stripped of .csv
 
     """
     check = os.path.isfile(filename)
@@ -204,7 +205,24 @@ def generate_metrics_dict(mean_hr_bpm, voltage_extremes,
     return metrics
 
 
+def write_json_file(save_file, metrics):
+    """ Writes values in metrics dictionary into a json file
+
+    Args:
+        metrics: dictionary containing assignment-specified hr data
+
+    Returns:
+
+    """
+    metrics["beats"] = list(metrics["beats"])
+    namefile = save_file + ".json"
+    with open(namefile, 'w') as outfile:
+        json.dump(metrics, outfile, indent=4)
+    return outfile
+
+
 if __name__ == "__main__":
+    save_file = verify_csv_file("test_data1.csv")
     time, voltage = store_csv_data("test_data1.csv")
     voltage_extremes = find_voltage_extrema(voltage)
     duration = find_duration(time)
@@ -214,12 +232,11 @@ if __name__ == "__main__":
     trunc_num_beats, trunc_beats = \
         user_truncated_time(0, 5, time, correlate_voltage)
     mean_hr_bpm = calculate_mean_bpm(0, 5, trunc_num_beats)
-    print(trunc_num_beats)
-    # print(trunc_beats)
-    print(mean_hr_bpm)
     metrics = generate_metrics_dict(mean_hr_bpm, voltage_extremes,
                                     duration, num_beats, beats)
-    print(metrics)
+    outfile = write_json_file(save_file, metrics)
+    print(outfile)
+    # print(metrics)
     # plt.plot(time, voltage)
     # plt.plot(time, correlate_voltage)
     # plt.show()
