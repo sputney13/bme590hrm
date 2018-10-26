@@ -143,8 +143,8 @@ def user_truncated_time(min_time, max_time, time, correlate_voltage):
     """ Detects beats and corresponding times for a user specified time interval
 
     Args:
-        min_time: minimum time for the time interval
-        max_time: maximum time for the time interval
+        min_time: minimum time for the time interval (s)
+        max_time: maximum time for the time interval (s)
         time: list of ECG time data from .csv file
         correlate_voltage: correlation of voltage data and "perfect" beat
 
@@ -163,17 +163,33 @@ def user_truncated_time(min_time, max_time, time, correlate_voltage):
     return trunc_num_beats, trunc_beats
 
 
+def calculate_mean_bpm(min_time, max_time, trunc_num_beats):
+    """ Calculate mean hr bpm for user specified time interval
+
+    Args:
+        min_time: minimum time for the time interval (s)
+        max_time: maximum time for the time interval (s)
+        trunc_num_beats: number of beats in the time interval
+
+    Returns:
+         mean_hr_bpm: average heart rate in bpm for the time interval
+    """
+    trunc_duration = max_time - min_time
+    mean_hr_bpm = 60*(trunc_num_beats/trunc_duration)
+    return mean_hr_bpm
+
+
 if __name__ == "__main__":
     time, voltage = store_csv_data("test_data1.csv")
     perfect_time, perfect_voltage = set_perfect_beat()
     correlate_voltage = correlate_perfect_beat(voltage, perfect_voltage)
     num_beats, beats = detect_beats(time, correlate_voltage)
-    trunc_num_beat, trunc_beats = \
+    trunc_num_beats, trunc_beats = \
         user_truncated_time(0, 5, time, correlate_voltage)
-    print(num_beats)
-    print(beats)
-    print(trunc_num_beat)
-    print(trunc_beats)
-    plt.plot(time, voltage)
-    plt.plot(time, correlate_voltage)
-    plt.show()
+    mean_hr_bpm = calculate_mean_bpm(0, 5, trunc_num_beats)
+    print(trunc_num_beats)
+    # print(trunc_beats)
+    print(mean_hr_bpm)
+    # plt.plot(time, voltage)
+    # plt.plot(time, correlate_voltage)
+    # plt.show()
