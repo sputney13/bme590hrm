@@ -122,29 +122,58 @@ def detect_beats(time, correlate_voltage):
 
     Returns:
          num_beats: number of beats detected over all time
-         beat_times: times at which a beat occurred
+         beats: times at which a beat occurred
 
     """
     n = 0
     num_beats = 0
-    beat_times = []
+    beats = []
     while n < len(correlate_voltage):
         if abs(correlate_voltage[n]) > 4.75:
             num_beats += 1
-            beat_times.append(time[n])
-            n = n + 100
+            beats.append(time[n])
+            n += 100
         else:
-            n = n + 1
-    return num_beats, beat_times
+            n += 1
+    beats = np.asarray(beats)
+    return num_beats, beats
+
+
+def user_truncated_time(min_time, max_time, time, correlate_voltage):
+    """ Detects beats and corresponding times for a user specified time interval
+
+    Args:
+        min_time: minimum time for the time interval
+        max_time: maximum time for the time interval
+        time: list of ECG time data from .csv file
+        correlate_voltage: correlation of voltage data and "perfect" beat
+
+    Returns:
+         trunc_num_beats: number of beats in user specified interval
+         trunc_beats: times at which beats in interval occur
+
+    """
+    trunc_time = []
+    trunc_voltage = []
+    for index in range(len(time)):
+        if min_time < time[index] < max_time:
+            trunc_time.append(time[index])
+            trunc_voltage.append(correlate_voltage[index])
+    trunc_num_beats, trunc_beats = detect_beats(trunc_time, trunc_voltage)
+    return trunc_num_beats, trunc_beats
 
 
 if __name__ == "__main__":
     time, voltage = store_csv_data("test_data1.csv")
     perfect_time, perfect_voltage = set_perfect_beat()
     correlate_voltage = correlate_perfect_beat(voltage, perfect_voltage)
-    num_beats, beat_times = detect_beats(time, correlate_voltage)
+    num_beats, beats = detect_beats(time, correlate_voltage)
+    trunc_num_beat, trunc_beats = \
+        user_truncated_time(0, 5, time, correlate_voltage)
     print(num_beats)
-    print(beat_times)
+    print(beats)
+    print(trunc_num_beat)
+    print(trunc_beats)
     plt.plot(time, voltage)
     plt.plot(time, correlate_voltage)
     plt.show()
