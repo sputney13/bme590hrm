@@ -106,8 +106,21 @@ def test_user_truncated_time():
     Returns:
 
     """
+    global trunc_num_beats
     trunc_num_beats, trunc_beats = hrm.user_truncated_time(
         0, 5, time1, correlate_voltage)
     assert trunc_num_beats == 6
     assert len(trunc_beats) == 6
     assert trunc_beats[5] < 5
+
+
+def test_calculate_mean_bpm():
+    """ Verifies that the mean bpm for the interval is correct
+
+    Args:
+
+    Returns:
+
+    """
+    mean_hr_bpm = hrm.calculate_mean_bpm(0, 5, trunc_num_beats)
+    assert mean_hr_bpm == 72
