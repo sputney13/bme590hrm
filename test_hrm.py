@@ -92,7 +92,22 @@ def test_detect_beats():
     Returns:
 
     """
-    num_beats, beat_times = hrm.detect_beats(time1, correlate_voltage)
+    num_beats, beats = hrm.detect_beats(time1, correlate_voltage)
     assert num_beats == 35
-    assert len(beat_times) == 35
-    assert beat_times[0] < 0.5
+    assert len(beats) == 35
+    assert beats[0] < 0.5
+
+
+def test_user_truncated_time():
+    """ Verifies beats and beat times are truncated properly
+
+    Args:
+
+    Returns:
+
+    """
+    trunc_num_beats, trunc_beats = hrm.user_truncated_time(
+        0, 5, time1, correlate_voltage)
+    assert trunc_num_beats == 6
+    assert len(trunc_beats) == 6
+    assert trunc_beats[5] < 5
