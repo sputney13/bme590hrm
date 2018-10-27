@@ -5,6 +5,38 @@ import numpy as np
 import json
 
 
+def main(filename, min_time=0, max_time=60):
+    """ Main function for heart rate monitor: takes .csv data containing
+        time and voltage, outputs JSON data about the heart rate data
+
+    Args:
+        filename: string containing name of .csv file with hr data
+        min_time: min time to calculate mean hr from (default is 0 s)
+        max_time: max time to calculate mean hr from (default is 60 s)
+
+    Returns:
+        outfile: JSON file containing hr metrics dictionary
+
+    """
+    save_file = verify_csv_file(filename)
+    time, voltage = store_csv_data(filename)
+    voltage_extremes = find_voltage_extrema(voltage)
+    duration = find_duration(time)
+    perfect_time, perfect_voltage = set_perfect_beat()
+    correlate_voltage = correlate_perfect_beat(voltage, perfect_voltage)
+    num_beats, beats = detect_beats(time, correlate_voltage)
+    trunc_num_beats, trunc_beats, trunc_time = \
+        user_truncated_time(min_time, max_time, time, correlate_voltage)
+    mean_hr_bpm = calculate_mean_bpm(trunc_time, trunc_num_beats)
+    metrics = generate_metrics_dict(mean_hr_bpm, voltage_extremes,
+                                    duration, num_beats, beats)
+    outfile = write_json_file(save_file, metrics)
+    plt.plot(time, voltage)
+    plt.plot(time, correlate_voltage)
+    plt.show()
+    return outfile
+
+
 def verify_csv_file(filename):
     """ Validates that user inputted file exists on drive
 
@@ -141,7 +173,8 @@ def detect_beats(time, correlate_voltage):
 
 
 def user_truncated_time(min_time, max_time, time, correlate_voltage):
-    """ Detects beats and corresponding times for a user specified time interval
+    """ Detects beats and beat times for a user specified time interval
+        If no specifications, time interval defaults to the first minute
 
     Args:
         min_time: minimum time for the time interval (s)
@@ -161,21 +194,20 @@ def user_truncated_time(min_time, max_time, time, correlate_voltage):
             trunc_time.append(time[index])
             trunc_voltage.append(correlate_voltage[index])
     trunc_num_beats, trunc_beats = detect_beats(trunc_time, trunc_voltage)
-    return trunc_num_beats, trunc_beats
+    return trunc_num_beats, trunc_beats, trunc_time
 
 
-def calculate_mean_bpm(min_time, max_time, trunc_num_beats):
+def calculate_mean_bpm(trunc_time, trunc_num_beats):
     """ Calculate mean hr bpm for user specified time interval
 
     Args:
-        min_time: minimum time for the time interval (s)
-        max_time: maximum time for the time interval (s)
+        trunc_time: time truncated by the user/default max and min times
         trunc_num_beats: number of beats in the time interval
 
     Returns:
          mean_hr_bpm: average heart rate in bpm for the time interval
     """
-    trunc_duration = max_time - min_time
+    trunc_duration = find_duration(trunc_time)
     mean_hr_bpm = 60*(trunc_num_beats/trunc_duration)
     return mean_hr_bpm
 
@@ -222,21 +254,4 @@ def write_json_file(save_file, metrics):
 
 
 if __name__ == "__main__":
-    save_file = verify_csv_file("test_data1.csv")
-    time, voltage = store_csv_data("test_data1.csv")
-    voltage_extremes = find_voltage_extrema(voltage)
-    duration = find_duration(time)
-    perfect_time, perfect_voltage = set_perfect_beat()
-    correlate_voltage = correlate_perfect_beat(voltage, perfect_voltage)
-    num_beats, beats = detect_beats(time, correlate_voltage)
-    trunc_num_beats, trunc_beats = \
-        user_truncated_time(0, 5, time, correlate_voltage)
-    mean_hr_bpm = calculate_mean_bpm(0, 5, trunc_num_beats)
-    metrics = generate_metrics_dict(mean_hr_bpm, voltage_extremes,
-                                    duration, num_beats, beats)
-    outfile = write_json_file(save_file, metrics)
-    print(outfile)
-    # print(metrics)
-    # plt.plot(time, voltage)
-    # plt.plot(time, correlate_voltage)
-    # plt.show()
+    main("test_data18.csv")
