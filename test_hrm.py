@@ -4,6 +4,16 @@ import json
 import hrm
 
 
+def test_main():
+    with pytest.raises(TypeError):
+        hrm.main()
+
+    outfile1 = hrm.main("test_data1.csv")
+    outfile2 = hrm.main("test_data1.csv", 0, 5)
+    assert outfile1 is not None
+    assert outfile2 is not None
+
+
 def test_verify_csv_file():
     """ Checks that a proper csv file has been inputted, or gives error
 
@@ -12,9 +22,10 @@ def test_verify_csv_file():
     Returns:
 
     """
-    global save_file
     with pytest.raises(FileNotFoundError):
         hrm.verify_csv_file('test_data.csv')
+
+    global save_file
     save_file = hrm.verify_csv_file('test_data1.csv')
     assert save_file == 'test_data1'
 
@@ -115,7 +126,8 @@ def test_user_truncated_time():
 
     """
     global trunc_num_beats
-    trunc_num_beats, trunc_beats = hrm.user_truncated_time(
+    global trunc_time
+    trunc_num_beats, trunc_beats, trunc_time = hrm.user_truncated_time(
         0, 5, time1, correlate_voltage)
     assert trunc_num_beats == 6
     assert len(trunc_beats) == 6
@@ -131,8 +143,8 @@ def test_calculate_mean_bpm():
 
     """
     global mean_hr_bpm
-    mean_hr_bpm = hrm.calculate_mean_bpm(0, 5, trunc_num_beats)
-    assert mean_hr_bpm == 72
+    mean_hr_bpm = hrm.calculate_mean_bpm(trunc_time, trunc_num_beats)
+    assert mean_hr_bpm < 73
 
 
 def test_generate_metrics_dict():
@@ -146,7 +158,7 @@ def test_generate_metrics_dict():
     global metrics
     metrics = hrm.generate_metrics_dict(mean_hr_bpm, voltage_extremes,
                                         duration, num_beats, beats)
-    assert metrics["mean_hr_bpm"] == 72
+    assert metrics["mean_hr_bpm"] < 73
     assert metrics["voltage_extremes"] == (-0.68, 1.05)
     assert metrics["duration"] == 27.772
     assert metrics["num_beats"] == 35
