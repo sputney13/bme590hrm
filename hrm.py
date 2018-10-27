@@ -16,6 +16,8 @@ def main(filename, min_time=0, max_time=60):
 
     Returns:
         outfile: JSON file containing hr metrics dictionary
+        Pyplot graph of time versus voltage from the .csv input
+        Pyplot graph of time versus the correlated voltage values
 
     """
     save_file = verify_csv_file(filename)
