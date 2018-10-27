@@ -1,11 +1,6 @@
 numpy
-scipy
-pandas
 ipython
-jupyter
 matplotlib
-scikit-image
-scikit-learn
 sphinx
 pytest
 pytest-pep8
