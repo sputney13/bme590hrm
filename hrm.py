@@ -173,7 +173,7 @@ def correlate_perfect_beat(voltage, perfect_voltage):
 
 
 def detect_beats(time, correlate_voltage):
-    """ Uses a threshold of |4.75| mV on the correlation to detect beats
+    """ Uses a threshold of 4.75 mV on the correlation to detect beats
 
     Args:
         correlate_voltage: correlation of voltage array and "perfect" beat
@@ -187,7 +187,7 @@ def detect_beats(time, correlate_voltage):
     num_beats = 0
     beats = []
     while n < len(correlate_voltage):
-        if abs(correlate_voltage[n]) > 4.75:
+        if correlate_voltage[n] > 4.75:
             num_beats += 1
             beats.append(time[n])
             n += 100
