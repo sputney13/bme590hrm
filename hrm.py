@@ -295,7 +295,3 @@ def write_json_file(save_file, metrics):
         json.dump(metrics, outfile, indent=4)
     logging.info("metrics dictionary saved to %s" % namefile)
     return outfile
-
-
-if __name__ == "__main__":
-    main("test_data32.csv")
