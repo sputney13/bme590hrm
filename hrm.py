@@ -189,6 +189,7 @@ def detect_beats(time, correlate_voltage):
     """ Uses a threshold of 4.75 mV on the correlation to detect beats
 
     Args:
+        time: time data from input .csv file
         correlate_voltage: correlation of voltage array and "perfect" beat
 
     Returns:
