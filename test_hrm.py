@@ -1,5 +1,6 @@
-import csv
 import pytest
+import csv
+import warnings
 import json
 import hrm
 
@@ -30,6 +31,18 @@ def test_store_csv_data():
     time2, voltage2 = hrm.store_csv_data('test_data28.csv')
     assert (time1[0], voltage1[0]) == (0, -0.145)
     assert (time2[325], voltage2[325]) == (0.903, -0.285)
+
+
+def test_voltage_range_error():
+    time32, voltage32 = hrm.store_csv_data("test_data32.csv")
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        voltage32 = hrm.voltage_range_error(voltage32)
+
+    assert len(w) == 1
+    assert "Voltage outside normal ECG range. Scaling data."\
+           in str(w[-1].message)
+    assert max(voltage32) <= 2
 
 
 def test_find_voltage_extrema():
@@ -63,8 +76,8 @@ def test_detect_beats():
     global num_beats
     global beats
     num_beats, beats = hrm.detect_beats(time1, correlate_voltage)
-    assert num_beats == 35
-    assert len(beats) == 35
+    assert num_beats == 34
+    assert len(beats) == 34
     assert beats[0] < 0.5
 
 
@@ -91,8 +104,8 @@ def test_generate_metrics_dict():
     assert metrics["mean_hr_bpm"] < 73
     assert metrics["voltage_extremes"] == (-0.68, 1.05)
     assert metrics["duration"] == 27.772
-    assert metrics["num_beats"] == 35
-    assert len(metrics["beats"]) == 35
+    assert metrics["num_beats"] == 34
+    assert len(metrics["beats"]) == 34
     assert metrics["beats"][0] < 0.5
 
 
