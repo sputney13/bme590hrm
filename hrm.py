@@ -33,8 +33,9 @@ def main(filename, min_time=0, max_time=60):
     perfect_time, perfect_voltage = set_perfect_beat()
     correlate_voltage = correlate_perfect_beat(voltage, perfect_voltage)
     num_beats, beats = detect_beats(time, correlate_voltage)
-    trunc_num_beats, trunc_beats, trunc_time = \
+    trunc_time, trunc_voltage = \
         user_truncated_time(min_time, max_time, time, correlate_voltage)
+    trunc_num_beats = user_truncated_beats(trunc_time, trunc_voltage)
     mean_hr_bpm = calculate_mean_bpm(trunc_time, trunc_num_beats)
     metrics = generate_metrics_dict(mean_hr_bpm, voltage_extremes,
                                     duration, num_beats, beats)
@@ -189,6 +190,7 @@ def detect_beats(time, correlate_voltage):
     """ Uses a threshold of 4.75 mV on the correlation to detect beats
 
     Args:
+        time: time data from input .csv file
         correlate_voltage: correlation of voltage array and "perfect" beat
 
     Returns:
@@ -212,8 +214,9 @@ def detect_beats(time, correlate_voltage):
 
 
 def user_truncated_time(min_time, max_time, time, correlate_voltage):
-    """ Detects beats and beat times for a user specified time interval
-        If no specifications, time interval defaults to the first minute
+    """ Cuts time and voltage data to within user-specified interval
+
+    If no user specified interval in main, the default is 0 to 60 sec
 
     Args:
         min_time: minimum time for the time interval (s)
@@ -222,20 +225,34 @@ def user_truncated_time(min_time, max_time, time, correlate_voltage):
         correlate_voltage: correlation of voltage data and "perfect" beat
 
     Returns:
-         trunc_num_beats: number of beats in user specified interval
+         trunc_time: times within user specified interval
          trunc_beats: times at which beats in interval occur
 
     """
     trunc_time = []
     trunc_voltage = []
     for index in range(len(time)):
-        if min_time < time[index] < max_time:
+        if min_time <= time[index] <= max_time:
             trunc_time.append(time[index])
             trunc_voltage.append(correlate_voltage[index])
-    logging.info("User-specifed time truncations of time and voltage stored")
+    logging.info("User-specified time truncations of time and voltage stored")
+    return trunc_time, trunc_voltage
+
+
+def user_truncated_beats(trunc_time, trunc_voltage):
+    """ Finds number of heartbeats and their times for specified interval
+
+    Args:
+        trunc_time: user-specified or default time interval
+        trunc_voltage: voltages corresponding to values in trunc_time
+
+    Returns:
+         trunc_num_beats: number of heart beats with specified interval
+
+    """
     trunc_num_beats, trunc_beats = detect_beats(trunc_time, trunc_voltage)
-    logging.info("Truncated num_beats and beats calculated")
-    return trunc_num_beats, trunc_beats, trunc_time
+    logging.info("Truncated num_beats calculated")
+    return trunc_num_beats
 
 
 def calculate_mean_bpm(trunc_time, trunc_num_beats):
@@ -295,7 +312,3 @@ def write_json_file(save_file, metrics):
         json.dump(metrics, outfile, indent=4)
     logging.info("metrics dictionary saved to %s" % namefile)
     return outfile
-
-
-if __name__ == "__main__":
-    main("test_data32.csv")
