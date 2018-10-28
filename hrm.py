@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import logging
 import os.path
 import csv
 import warnings
@@ -19,8 +20,11 @@ def main(filename, min_time=0, max_time=60):
         outfile: JSON file containing hr metrics dictionary
         Pyplot graph of time versus voltage from the .csv input
         Pyplot graph of time versus the correlated voltage values
+        hrm.log, a log file containing info and warnings from run session
 
     """
+    logging.basicConfig(filename="hrm.log", filemode='w', level=logging.INFO)
+    logging.info("Started Run")
     save_file = verify_csv_file(filename)
     time, voltage = store_csv_data(filename)
     voltage = voltage_range_error(voltage)
@@ -38,6 +42,7 @@ def main(filename, min_time=0, max_time=60):
     plt.plot(time, voltage)
     plt.plot(time, correlate_voltage)
     plt.show()
+    logging.info("Completed Run")
     return outfile
 
 
@@ -53,6 +58,7 @@ def verify_csv_file(filename):
     """
     check = os.path.isfile(filename)
     if check is False:
+        logging.exception("FileNotFoundError: File must exist on machine")
         raise FileNotFoundError("File must exist on machine.")
     else:
         save_file = filename.strip('.csv')
@@ -84,8 +90,10 @@ def store_csv_data(filename):
                         voltage.append(row[1])
                     else:
                         continue
+                logging.info("Time and voltage data stored.")
                 break
             except csv.Error:
+                logging.exception("csv.error: User must input new filename.")
                 filename = input("Input a valid .csv file as a string:")
                 store_csv_data(filename)
     return time, voltage
@@ -107,6 +115,7 @@ def voltage_range_error(voltage):
     """
     if max(voltage) > 2 or min(voltage) < -2:
         warnings.warn("Voltage outside normal ECG range. Scaling data.")
+        logging.warning("Voltage outside normal ECG range. Scaling data.")
         scale = max(voltage)/2
         voltage[:] = [x/scale for x in voltage]
     return voltage
@@ -125,6 +134,7 @@ def find_voltage_extrema(voltage):
     maxvoltage = max(voltage)
     minvoltage = min(voltage)
     voltage_extremes = (minvoltage, maxvoltage)
+    logging.info("voltage_extremes key has been calculated")
     return voltage_extremes
 
 
@@ -139,6 +149,7 @@ def find_duration(time):
 
     """
     duration = time[-1] - time[1]
+    logging.info("duration key has been calculated")
     return duration
 
 
@@ -153,6 +164,7 @@ def set_perfect_beat():
     time, voltage = store_csv_data("test_data21.csv")
     perfect_time = np.asarray(time[0:119])
     perfect_voltage = np.asarray(voltage[0:119])
+    logging.info("Saved 'perfect beat' data")
     return perfect_time, perfect_voltage
 
 
@@ -169,6 +181,7 @@ def correlate_perfect_beat(voltage, perfect_voltage):
     """
     voltage = np.asarray(voltage)
     correlate_voltage = np.correlate(voltage, perfect_voltage, 'same')
+    logging.info("Correlated voltage data with perfect beat data")
     return correlate_voltage
 
 
@@ -194,6 +207,7 @@ def detect_beats(time, correlate_voltage):
         else:
             n += 1
     beats = np.asarray(beats)
+    logging.info("num_beats and beats keys have been calculated")
     return num_beats, beats
 
 
@@ -218,7 +232,9 @@ def user_truncated_time(min_time, max_time, time, correlate_voltage):
         if min_time < time[index] < max_time:
             trunc_time.append(time[index])
             trunc_voltage.append(correlate_voltage[index])
+    logging.info("User-specifed time truncations of time and voltage stored")
     trunc_num_beats, trunc_beats = detect_beats(trunc_time, trunc_voltage)
+    logging.info("Truncated num_beats and beats calculated")
     return trunc_num_beats, trunc_beats, trunc_time
 
 
@@ -234,6 +250,7 @@ def calculate_mean_bpm(trunc_time, trunc_num_beats):
     """
     trunc_duration = find_duration(trunc_time)
     mean_hr_bpm = 60*(trunc_num_beats/trunc_duration)
+    logging.info("mean_hr_bpm key has been calculated")
     return mean_hr_bpm
 
 
@@ -259,6 +276,7 @@ def generate_metrics_dict(mean_hr_bpm, voltage_extremes,
         "num_beats": num_beats,
         "beats": beats
     }
+    logging.info("metrics dictionary has been created")
     return metrics
 
 
@@ -275,6 +293,7 @@ def write_json_file(save_file, metrics):
     namefile = save_file + ".json"
     with open(namefile, 'w') as outfile:
         json.dump(metrics, outfile, indent=4)
+    logging.info("metrics dictionary saved to %s" % namefile)
     return outfile
 
 
