@@ -1,6 +1,7 @@
-import csv
-import os.path
 import matplotlib.pyplot as plt
+import os.path
+import csv
+import warnings
 import numpy as np
 import json
 
@@ -22,6 +23,7 @@ def main(filename, min_time=0, max_time=60):
     """
     save_file = verify_csv_file(filename)
     time, voltage = store_csv_data(filename)
+    voltage = voltage_range_error(voltage)
     voltage_extremes = find_voltage_extrema(voltage)
     duration = find_duration(time)
     perfect_time, perfect_voltage = set_perfect_beat()
@@ -89,6 +91,27 @@ def store_csv_data(filename):
     return time, voltage
 
 
+def voltage_range_error(voltage):
+    """ Gives warning if voltage values are outside of ECG range
+
+    Determines if voltage values are outside ECG range of [-2 2], gives
+    a warning if any are, and then automatically scales the data down to
+    within [-2 2].
+
+    Args:
+        voltage: raw voltage data from .csv file input
+
+    Returns:
+        voltage: voltage values within a [-2 2] range (scaled or inputted)
+
+    """
+    if max(voltage) > 2 or min(voltage) < -2:
+        warnings.warn("Voltage outside normal ECG range. Scaling data.")
+        scale = max(voltage)/2
+        voltage[:] = [x/scale for x in voltage]
+    return voltage
+
+
 def find_voltage_extrema(voltage):
     """ Determines minimum and maximum values of list, saves into tuple
 
@@ -150,7 +173,7 @@ def correlate_perfect_beat(voltage, perfect_voltage):
 
 
 def detect_beats(time, correlate_voltage):
-    """ Uses a threshold of |4.75| mV on the correlation to detect beats
+    """ Uses a threshold of 4.75 mV on the correlation to detect beats
 
     Args:
         correlate_voltage: correlation of voltage array and "perfect" beat
@@ -164,7 +187,7 @@ def detect_beats(time, correlate_voltage):
     num_beats = 0
     beats = []
     while n < len(correlate_voltage):
-        if abs(correlate_voltage[n]) > 4.75:
+        if correlate_voltage[n] > 4.75:
             num_beats += 1
             beats.append(time[n])
             n += 100
@@ -256,4 +279,4 @@ def write_json_file(save_file, metrics):
 
 
 if __name__ == "__main__":
-    main("test_data18.csv")
+    main("test_data32.csv")
