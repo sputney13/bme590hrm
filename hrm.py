@@ -79,24 +79,20 @@ def store_csv_data(filename):
     """
     time = []
     voltage = []
-    while True:
-        with open(filename, newline='') as csvfile:
-            try:
-                csvreader = csv.reader(csvfile, delimiter=',',
-                                       quoting=csv.QUOTE_NONNUMERIC)
-                for row in csvreader:
-                    if isinstance(row[0], float) and\
-                            isinstance(row[1], float) is True:
-                        time.append(row[0])
-                        voltage.append(row[1])
-                    else:
-                        continue
-                logging.info("Time and voltage data stored.")
-                break
-            except csv.Error:
-                logging.exception("csv.error: User must input new filename.")
-                filename = input("Input a valid .csv file as a string:")
-                store_csv_data(filename)
+    with open(filename, newline='') as csvfile:
+        try:
+            csvreader = csv.reader(csvfile, delimiter=',',
+                                   quoting=csv.QUOTE_NONNUMERIC)
+            logging.info("Time and voltage data stored.")
+            for row in csvreader:
+                if type(row[0]) == float and type(row[1]) == float:
+                    time.append(row[0])
+                    voltage.append(row[1])
+                else:
+                    continue
+        except ValueError:
+            logging.exception("ValueError: String in data, string skipped")
+            pass
     return time, voltage
 
 
@@ -202,12 +198,27 @@ def detect_beats(time, correlate_voltage):
     num_beats = 0
     beats = []
     while n < len(correlate_voltage):
-        if correlate_voltage[n] > 4.75:
-            num_beats += 1
-            beats.append(time[n])
-            n += 100
+        if max(correlate_voltage) < 6:
+            if correlate_voltage[n] > 2:
+                num_beats += 1
+                beats.append(time[n])
+                n += 100
+            else:
+                n += 1
+        elif max(correlate_voltage) < 10:
+            if correlate_voltage[n] > 4.75:
+                num_beats += 1
+                beats.append(time[n])
+                n += 100
+            else:
+                n += 1
         else:
-            n += 1
+            if correlate_voltage[n] > 12:
+                num_beats += 1
+                beats.append(time[n])
+                n += 100
+            else:
+                n += 1
     beats = np.asarray(beats)
     logging.info("num_beats and beats keys have been calculated")
     return num_beats, beats
