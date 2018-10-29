@@ -54,7 +54,7 @@ def test_voltage_range_error():
     assert len(w) == 1
     assert "Voltage outside normal ECG range. Scaling data."\
            in str(w[-1].message)
-    assert max(new_voltage32) <= 2
+    assert max(new_voltage32) <= 4
     assert new_voltage1 == voltage1
 
 
@@ -63,10 +63,10 @@ def test_find_voltage_extrema():
     global voltage_extremes32
     voltage_extremes1 = hrm.find_voltage_extrema(voltage1)
     voltage_extremes32 = hrm.find_voltage_extrema(new_voltage32)
-    scale_volt_min = -375 / 303.125
+    scale_volt_min = -375 / 151.5625
 
     assert voltage_extremes1 == (-0.68, 1.05)
-    assert voltage_extremes32 == (scale_volt_min, 2.0)
+    assert voltage_extremes32 == (scale_volt_min, 4.0)
 
 
 def test_find_duration():
@@ -142,7 +142,7 @@ def test_user_truncated_beats():
     trunc_num_beats32 = \
         hrm.user_truncated_beats(trunc_time32, trunc_voltage32)
 
-    assert trunc_num_beats1 == 6
+    assert trunc_num_beats1 == 7
     assert trunc_num_beats32 == 3
 
 
@@ -152,7 +152,7 @@ def test_calculate_mean_bpm():
     mean_hr_bpm1 = hrm.calculate_mean_bpm(trunc_time1, trunc_num_beats1)
     mean_hr_bpm32 = hrm.calculate_mean_bpm(trunc_time32, trunc_num_beats32)
 
-    assert mean_hr_bpm1 < 73
+    assert mean_hr_bpm1 < 85
     assert mean_hr_bpm32 < 96
 
 
@@ -161,7 +161,7 @@ def test_generate_metrics_dict():
     metrics1 = hrm.generate_metrics_dict(mean_hr_bpm1, voltage_extremes1,
                                          duration1, num_beats1, beats1)
 
-    assert metrics1["mean_hr_bpm"] < 73
+    assert metrics1["mean_hr_bpm"] < 85
     assert metrics1["voltage_extremes"] == (-0.68, 1.05)
     assert metrics1["duration"] == 27.772
     assert metrics1["num_beats"] == 34
