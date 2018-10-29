@@ -24,4 +24,6 @@ hrm.main(filename, min_time=0, max_time=60)
     """
 ```
 
-This package utitilizes a beat detector algorithm based on correlation. The `set_perfect_beat` function cuts a "perfect" heart beat from test_data21.csv, and following functions correlate this data with the voltage data from the inputted .csv file then threshold the correlation to determine where beats occur. When a correlated voltage value above the threshold is detected, the number of beats is incremented and the index iterates forward 100 values to prevent repeat detections. 
+This package utitilizes a beat detector algorithm based on correlation. The `set_perfect_beat` function cuts a "perfect" heart beat from test_data21.csv, and following functions correlate this data with the voltage data from the inputted .csv file then threshold the correlation to determine where beats occur. This threshold is a set value of 0.5 mV for small correlated voltages (max of less than 4.5 mV) and is 60% of the max of the correlated voltage values in all other cases. When a correlated voltage value above the threshold is detected, the number of beats is incremented and the index iterates forward 100 values to prevent repeat detections.
+
+Note that voltage values in the data outside of the range of -4 mV to 4 mV will give a warning that the voltage contains values outside of ECG range. The program will automatically scale data to fit within this range, which will impact the values of the `voltage_extremes` key within the `metrics` dictionary.

@@ -101,19 +101,19 @@ def voltage_range_error(voltage):
 
     Determines if voltage values are outside ECG range of [-2 2], gives
     a warning if any are, and then automatically scales the data down to
-    within [-2 2].
+    within [-4 4].
 
     Args:
         voltage: raw voltage data from .csv file input
 
     Returns:
-        voltage: voltage values within a [-2 2] range (scaled or inputted)
+        voltage: voltage values within a [-4 4] range (scaled or inputted)
 
     """
-    if max(voltage) > 2 or min(voltage) < -2:
+    if max(voltage) > 4 or min(voltage) < -4:
         warnings.warn("Voltage outside normal ECG range. Scaling data.")
         logging.warning("Voltage outside normal ECG range. Scaling data.")
-        scale = max(voltage)/2
+        scale = max(voltage)/4
         voltage[:] = [x/scale for x in voltage]
     return voltage
 
@@ -183,7 +183,11 @@ def correlate_perfect_beat(voltage, perfect_voltage):
 
 
 def detect_beats(time, correlate_voltage):
-    """ Uses a threshold of 4.75 mV on the correlation to detect beats
+    """ Uses a threshold on the correlated voltage to detect beats
+
+    A threshold of 0.5mV is applied to small voltage correlation values
+    (less than 4.5mV max) and a threshold of 60% of the max correlated
+    voltage value is used for all other cases.
 
     Args:
         time: time data from input .csv file
@@ -198,22 +202,15 @@ def detect_beats(time, correlate_voltage):
     num_beats = 0
     beats = []
     while n < len(correlate_voltage):
-        if max(correlate_voltage) < 6:
-            if correlate_voltage[n] > 2:
-                num_beats += 1
-                beats.append(time[n])
-                n += 100
-            else:
-                n += 1
-        elif max(correlate_voltage) < 10:
-            if correlate_voltage[n] > 4.75:
+        if max(correlate_voltage) < 4.5:
+            if correlate_voltage[n] > 0.5:
                 num_beats += 1
                 beats.append(time[n])
                 n += 100
             else:
                 n += 1
         else:
-            if correlate_voltage[n] > 12:
+            if correlate_voltage[n] > .6*max(correlate_voltage):
                 num_beats += 1
                 beats.append(time[n])
                 n += 100
