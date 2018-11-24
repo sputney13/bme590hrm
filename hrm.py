@@ -99,7 +99,7 @@ def store_csv_data(filename):
 def voltage_range_error(voltage):
     """ Gives warning if voltage values are outside of ECG range
 
-    Determines if voltage values are outside ECG range of [-2 2], gives
+    Determines if voltage values are outside ECG range of [-4 4], gives
     a warning if any are, and then automatically scales the data down to
     within [-4 4].
 
@@ -145,7 +145,7 @@ def find_duration(time):
         duration: time duration of the ECG strip
 
     """
-    duration = time[-1] - time[1]
+    duration = time[-1] - time[0]
     logging.info("duration key has been calculated")
     return duration
 
@@ -309,9 +309,11 @@ def write_json_file(save_file, metrics):
     """ Writes values in metrics dictionary into a json file
 
     Args:
+        save_file: string containing name of inputted .csv file (sans .csv)
         metrics: dictionary containing assignment-specified hr data
 
     Returns:
+        outfile: json file containing calculated metrics dictionary data
 
     """
     metrics["beats"] = list(metrics["beats"])
