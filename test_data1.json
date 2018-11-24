@@ -1,10 +1,10 @@
 {
-    "mean_hr_bpm": 84.05043025815489,
+    "mean_hr_bpm": 73.44734473447345,
     "voltage_extremes": [
         -0.68,
         1.05
     ],
-    "duration": 27.772,
+    "duration": 27.775,
     "num_beats": 34,
     "beats": [
         0.281,
