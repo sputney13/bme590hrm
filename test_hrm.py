@@ -10,7 +10,7 @@ def test_main():
         hrm.main()
 
     outfile1 = hrm.main("test_data1.csv")
-    outfile2 = hrm.main("test_data1.csv", 0, 5)
+    outfile2 = hrm.main("test_data1.csv", 0, 45)
     assert outfile1 is not None
     assert outfile2 is not None
 
@@ -24,14 +24,12 @@ def test_verify_csv_file():
 
 
 def test_store_csv_data():
-    global voltage1
     global time1
-    global voltage21
     global time21
-    global voltage28
-    global time28
-    global voltage32
+    global voltage21
     global time32
+    global voltage1
+    global voltage32
     time1, voltage1 = hrm.store_csv_data('test_data1.csv')
     time21, voltage21 = hrm.store_csv_data('test_data21.csv')
     time28, voltage28 = hrm.store_csv_data('test_data28.csv')
@@ -44,39 +42,38 @@ def test_store_csv_data():
 
 
 def test_voltage_range_error():
-    global new_voltage32
+    voltage = [1, 2, 3, 5]
+    voltage2 = [-1, 2, -3, 0.5]
+
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        new_voltage32 = hrm.voltage_range_error(voltage32)
+        new_voltage1 = hrm.voltage_range_error(voltage)
 
-    new_voltage1 = hrm.voltage_range_error(voltage1)
+    new_voltage2 = hrm.voltage_range_error(voltage2)
 
     assert len(w) == 1
     assert "Voltage outside normal ECG range. Scaling data."\
            in str(w[-1].message)
-    assert max(new_voltage32) <= 4
-    assert new_voltage1 == voltage1
+    assert max(new_voltage1) <= 4
+    assert new_voltage2 == voltage2
 
 
-def test_find_voltage_extrema():
-    global voltage_extremes1
-    global voltage_extremes32
-    voltage_extremes1 = hrm.find_voltage_extrema(voltage1)
-    voltage_extremes32 = hrm.find_voltage_extrema(new_voltage32)
-    scale_volt_min = -375 / 151.5625
-
-    assert voltage_extremes1 == (-0.68, 1.05)
-    assert voltage_extremes32 == (scale_volt_min, 4.0)
+@pytest.mark.parametrize("a,expected", [
+    ([0, 1, 3, 5], (0, 5)),
+    ([-3, 4, 5, -7], (-7, 5)),
+    ([-7.2, -7.3, 1.2, 1.3], (-7.3, 1.3))
+])
+def test_find_voltage_extrema(a, expected):
+    assert hrm.find_voltage_extrema(a) == expected
 
 
-def test_find_duration():
-    global duration1
-    global duration32
-    duration1 = hrm.find_duration(time1)
-    duration32 = hrm.find_duration(time32)
-
-    assert duration1 == 27.772
-    assert duration32 < 13.887
+@pytest.mark.parametrize("a,expected", [
+    ([0, 1, 3, 5], 5),
+    ([.03, .010, 1], .97),
+    ([2, 3.5, 4.6, 7.8], 5.8)
+])
+def test_find_duration(a, expected):
+    assert hrm.find_duration(a) == expected
 
 
 def test_set_perfect_beat():
@@ -90,6 +87,7 @@ def test_set_perfect_beat():
 def test_correlate_perfect_beat():
     global correlate_voltage1
     global correlate_voltage32
+    new_voltage32 = hrm.voltage_range_error(voltage32)
     correlate_voltage1 = hrm.correlate_perfect_beat(voltage1,
                                                     perfect_voltage)
     correlate_voltage32 = hrm.correlate_perfect_beat(new_voltage32,
@@ -100,10 +98,6 @@ def test_correlate_perfect_beat():
 
 
 def test_detect_beats():
-    global num_beats1
-    global beats1
-    global num_beats32
-    global beats32
     num_beats1, beats1 = hrm.detect_beats(time1, correlate_voltage1)
     num_beats32, beats32 = hrm.detect_beats(time32, correlate_voltage32)
 
@@ -134,9 +128,6 @@ def test_user_truncated_time():
 
 
 def test_user_truncated_beats():
-    global trunc_num_beats1
-    global trunc_num_beats32
-
     trunc_num_beats1 = \
         hrm.user_truncated_beats(trunc_time1, trunc_voltage1)
     trunc_num_beats32 = \
@@ -146,35 +137,34 @@ def test_user_truncated_beats():
     assert trunc_num_beats32 == 3
 
 
-def test_calculate_mean_bpm():
-    global mean_hr_bpm1
-    global mean_hr_bpm32
-    mean_hr_bpm1 = hrm.calculate_mean_bpm(trunc_time1, trunc_num_beats1)
-    mean_hr_bpm32 = hrm.calculate_mean_bpm(trunc_time32, trunc_num_beats32)
-
-    assert mean_hr_bpm1 < 85
-    assert mean_hr_bpm32 < 96
+@pytest.mark.parametrize("a,b,expected", [
+    ([0, 1, 3, 5], 5, 60),
+    ([0, .010, 1.0], 2, 120),
+    ([2, 3.5, 4.6, 12.0], 30, 180)
+])
+def test_calculate_mean_bpm(a, b, expected):
+    assert hrm.calculate_mean_bpm(a, b) == expected
 
 
 def test_generate_metrics_dict():
-    global metrics1
-    metrics1 = hrm.generate_metrics_dict(mean_hr_bpm1, voltage_extremes1,
-                                         duration1, num_beats1, beats1)
+    metrics1 = hrm.generate_metrics_dict(77, (-1, 2), 33.2,
+                                         4, [1, 7.8, 10, 23.4])
 
-    assert metrics1["mean_hr_bpm"] < 85
-    assert metrics1["voltage_extremes"] == (-0.68, 1.05)
-    assert metrics1["duration"] == 27.772
-    assert metrics1["num_beats"] == 34
-    assert len(metrics1["beats"]) == 34
-    assert metrics1["beats"][0] < 0.5
+    assert metrics1["mean_hr_bpm"] == 77
+    assert metrics1["voltage_extremes"] == (-1, 2)
+    assert metrics1["duration"] == 33.2
+    assert metrics1["num_beats"] == 4
+    assert len(metrics1["beats"]) == 4
+    assert metrics1["beats"][0] == 1
 
 
 def test_write_json_file():
     json_file = open("test_data1.json")
     new_metrics = json.loads(json_file.read())
-    assert new_metrics["mean_hr_bpm"] == metrics1["mean_hr_bpm"]
-    assert new_metrics["voltage_extremes"] == \
-        list(metrics1["voltage_extremes"])
-    assert new_metrics["duration"] == metrics1["duration"]
-    assert new_metrics["num_beats"] == metrics1["num_beats"]
-    assert new_metrics["beats"] == list(metrics1["beats"])
+
+    assert new_metrics["mean_hr_bpm"] < 73.5
+    assert new_metrics["voltage_extremes"] == [-0.68, 1.05]
+    assert new_metrics["duration"] == 27.775
+    assert new_metrics["num_beats"] == 34
+    assert len(new_metrics["beats"]) == 34
+    assert new_metrics["beats"][0] == 0.281
